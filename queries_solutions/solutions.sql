@@ -27,3 +27,19 @@ JOIN country c
     ON g.country_id = c.country_id
 GROUP BY c.continent
 ORDER BY total_confirmed DESC;
+
+--Aggregate Functions
+SELECT
+    AVG(g.new_deaths) AS average_new_deaths_per_day
+FROM global_covid_stats g;
+
+SELECT
+    c.name,
+    g.active_cases
+FROM global_covid_stats g
+JOIN country c
+    ON g.country_id = c.country_id
+WHERE g.report_date = '2020-09-30'
+ORDER BY g.active_cases DESC
+LIMIT 1;
+
