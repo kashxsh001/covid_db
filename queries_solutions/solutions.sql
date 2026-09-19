@@ -43,3 +43,34 @@ WHERE g.report_date = '2020-09-30'
 ORDER BY g.active_cases DESC
 LIMIT 1;
 
+--Stored Procedures
+CREATE OR REPLACE PROCEDURE get_recovered_cases(
+    IN p_country_id INT,
+    IN p_date DATE,
+    INOUT p_recovered BIGINT DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    SELECT recovered
+    INTO p_recovered
+    FROM global_covid_stats
+    WHERE country_id = p_country_id
+      AND report_date = p_date;
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE update_deaths(
+    IN p_country_id INT,
+    IN p_date DATE,
+    IN p_deaths BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE global_covid_stats
+    SET deaths = p_deaths
+    WHERE country_id = p_country_id
+      AND report_date = p_date;
+END;
+$$;
