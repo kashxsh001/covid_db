@@ -247,3 +247,30 @@ BEGIN
 
 END;
 $$;
+
+--GroupBy
+SELECT
+    c.continent,
+    SUM(g.confirmed) AS total_confirmed
+FROM global_covid_stats g
+JOIN country c
+    ON g.country_id = c.country_id
+GROUP BY c.continent
+ORDER BY total_confirmed DESC;
+
+SELECT
+    report_date,
+    SUM(deaths) AS total_deaths,
+    SUM(recovered) AS total_recovered
+FROM global_covid_stats
+GROUP BY report_date
+ORDER BY report_date;
+
+SELECT
+    c.name,
+    AVG(g.new_confirmed) AS average_daily_new_cases
+FROM global_covid_stats g
+JOIN country c
+    ON g.country_id = c.country_id
+GROUP BY c.name
+ORDER BY average_daily_new_cases DESC;
