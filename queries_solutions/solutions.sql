@@ -74,6 +74,7 @@ BEGIN
       AND report_date = p_date;
 END;
 $$;
+
  -- VIEWS
 
 CREATE OR REPLACE VIEW country_covid_summary AS
@@ -84,6 +85,15 @@ SELECT
     g.confirmed,
     g.deaths,
     g.recovered
+
+-- T-SQL
+SELECT
+    c.name,
+    g.confirmed,
+    g.deaths,
+    g.recovered,
+    (g.confirmed + g.deaths + g.recovered) AS total_cases
+
 FROM global_covid_stats g
 JOIN country c
     ON g.country_id = c.country_id;
@@ -113,3 +123,66 @@ FROM (
         ON g.country_id = c.country_id
 ) x
 WHERE rn = 1;
+=======
+SELECT
+    c.name,
+    g.new_confirmed
+FROM global_covid_stats g
+JOIN country c
+    ON g.country_id = c.country_id
+WHERE g.report_date = '2020-09-30'
+  AND g.new_confirmed = (
+      SELECT MAX(new_confirmed)
+      FROM global_covid_stats
+      WHERE report_date = '2020-09-30'
+  );
+
+--CTE
+WITH weekly_data AS (
+    SELECT
+        country_id,
+        report_date,
+        confirmed,
+        LAG(confirmed, 7) OVER (
+            PARTITION BY country_id
+            ORDER BY report_date
+        ) AS confirmed_7_days_ago
+    FROM global_covid_stats
+)
+SELECT
+    c.name,
+    report_date,
+    confirmed,
+    confirmed_7_days_ago,
+    ROUND(
+        (
+            (confirmed - confirmed_7_days_ago) * 100.0
+            / NULLIF(confirmed_7_days_ago, 0)
+        ),
+        2
+    ) AS percentage_increase
+FROM weekly_data w
+JOIN country c
+    ON w.country_id = c.country_id
+WHERE confirmed_7_days_ago IS NOT NULL;
+
+WITH latest_date AS (
+    SELECT MAX(report_date) AS max_date
+    FROM global_covid_stats
+),
+latest_data AS (
+    SELECT
+        g.country_id,
+        g.active_cases
+    FROM global_covid_stats g
+    JOIN latest_date l
+        ON g.report_date = l.max_date
+)
+SELECT
+    c.name,
+    ld.active_cases
+FROM latest_data ld
+JOIN country c
+    ON ld.country_id = c.country_id
+ORDER BY ld.active_cases DESC
+LIMIT 1;
