@@ -186,3 +186,64 @@ JOIN country c
     ON ld.country_id = c.country_id
 ORDER BY ld.active_cases DESC
 LIMIT 1;
+
+-- UDF
+CREATE OR REPLACE FUNCTION mortality_rate(
+    p_country_id INT
+)
+RETURNS NUMERIC
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_confirmed BIGINT;
+    v_deaths BIGINT;
+BEGIN
+
+    SELECT
+        confirmed,
+        deaths
+    INTO
+        v_confirmed,
+        v_deaths
+    FROM global_covid_stats
+    WHERE country_id = p_country_id
+    ORDER BY report_date DESC
+    LIMIT 1;
+
+    RETURN ROUND(
+        (v_deaths * 100.0) / NULLIF(v_confirmed, 0),
+        2
+    );
+
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION recovery_rate(
+    p_country_id INT,
+    p_date DATE
+)
+RETURNS NUMERIC
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_confirmed BIGINT;
+    v_recovered BIGINT;
+BEGIN
+
+    SELECT
+        confirmed,
+        recovered
+    INTO
+        v_confirmed,
+        v_recovered
+    FROM global_covid_stats
+    WHERE country_id = p_country_id
+      AND report_date = p_date;
+
+    RETURN ROUND(
+        (v_recovered * 100.0) / NULLIF(v_confirmed, 0),
+        2
+    );
+
+END;
+$$;
