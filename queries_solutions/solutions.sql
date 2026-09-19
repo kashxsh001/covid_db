@@ -74,3 +74,26 @@ BEGIN
       AND report_date = p_date;
 END;
 $$;
+-- T-SQL
+SELECT
+    c.name,
+    g.confirmed,
+    g.deaths,
+    g.recovered,
+    (g.confirmed + g.deaths + g.recovered) AS total_cases
+FROM global_covid_stats g
+JOIN country c
+    ON g.country_id = c.country_id;
+
+SELECT
+    c.name,
+    g.new_confirmed
+FROM global_covid_stats g
+JOIN country c
+    ON g.country_id = c.country_id
+WHERE g.report_date = '2020-09-30'
+  AND g.new_confirmed = (
+      SELECT MAX(new_confirmed)
+      FROM global_covid_stats
+      WHERE report_date = '2020-09-30'
+  );
