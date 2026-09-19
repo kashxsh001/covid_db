@@ -1,0 +1,29 @@
+SELECT c.name,g.confirmed 
+FROM country c JOIN global_covid_stats g
+On c.country_id = g.global_stat_id
+where g.report_date = '2020-06-30'
+Order BY g.confirmed DESC
+LIMIT 1;
+
+SELECT
+    c.name,
+    s.name,
+    cs.deaths
+FROM covid_case_stats cs
+JOIN country c
+    ON cs.country_id = c.country_id
+JOIN state s
+    ON cs.state_id = s.state_id
+WHERE cs.report_date = '2020-09-30'
+ORDER BY cs.deaths DESC;
+
+SELECT
+    c.continent,
+    SUM(g.confirmed) AS total_confirmed,
+    SUM(g.deaths) AS total_deaths,
+    SUM(g.recovered) AS total_recovered
+FROM global_covid_stats g
+JOIN country c
+    ON g.country_id = c.country_id
+GROUP BY c.continent
+ORDER BY total_confirmed DESC;
