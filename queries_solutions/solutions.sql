@@ -74,3 +74,42 @@ BEGIN
       AND report_date = p_date;
 END;
 $$;
+ -- VIEWS
+
+CREATE OR REPLACE VIEW country_covid_summary AS
+SELECT
+    c.country_id,
+    c.name,
+    g.report_date,
+    g.confirmed,
+    g.deaths,
+    g.recovered
+FROM global_covid_stats g
+JOIN country c
+    ON g.country_id = c.country_id;
+
+CREATE OR REPLACE VIEW latest_country_covid_data AS
+SELECT
+    country_id,
+    name,
+    report_date,
+    confirmed,
+    deaths,
+    recovered
+FROM (
+    SELECT
+        c.country_id,
+        c.name,
+        g.report_date,
+        g.confirmed,
+        g.deaths,
+        g.recovered,
+        ROW_NUMBER() OVER (
+            PARTITION BY c.country_id
+            ORDER BY g.report_date DESC
+        ) AS rn
+    FROM global_covid_stats g
+    JOIN country c
+        ON g.country_id = c.country_id
+) x
+WHERE rn = 1;
